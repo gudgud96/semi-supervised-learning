@@ -1,0 +1,9 @@
+
+.idea/
+__pycache__/
+
+# Datasets
+iris-ssl10/
+iris-ssl20/
+iris-ssl30/
+iris-ssl40/
