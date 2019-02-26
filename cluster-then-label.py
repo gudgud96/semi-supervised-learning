@@ -215,13 +215,14 @@ def cluster_then_label(X_data, Y_data):
 def main():
     # prepare data - unlabelled, labelled, test
     num = 10
-    X_unlabelled, Y_unlabelled = prepare_data('iris-ssl40/iris-ssl40-10-{}tra.dat'.format(num))
+    percentage = 10
+    X_unlabelled, Y_unlabelled = prepare_data('iris-ssl{}/iris-ssl{}-10-{}tra.dat'.format(percentage, percentage, num))
     plot_scatter(X_unlabelled, Y_unlabelled, name="unlabelled.png")
 
-    X_labelled, Y_labelled = prepare_data('iris-ssl40/iris-ssl40-10-{}trs.dat'.format(num))
+    X_labelled, Y_labelled = prepare_data('iris-ssl{}/iris-ssl{}-10-{}trs.dat'.format(percentage, percentage, num))
     plot_scatter(X_labelled, Y_labelled, name="labelled.png")
 
-    X_test, Y_test = prepare_data('iris-ssl40/iris-ssl40-10-{}tst.dat'.format(num))
+    X_test, Y_test = prepare_data('iris-ssl{}/iris-ssl{}-10-{}tst.dat'.format(percentage, percentage, num))
 
     # cluster-then-label
     model, y_predict, label_dict = cluster_then_label(X_unlabelled, Y_unlabelled)
