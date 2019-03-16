@@ -90,5 +90,5 @@ Ratherm it is highly dependent on the data distribution, as if the data itself i
 * We can observe result of cluster-then-label using other not-so-well-clustered datasets / other clustering algorithms.
 
 ### To-do
-[ ] Use other clustering algorithms (hierachical agglomerative, etc.)<br>
-[ ] Any ideas on assigning labels after clustering?
+[ ] Use other clustering algorithms (hierachical agglomerative, etc.)
+[ ] Use supervised classifier other than majority vote for classifiying in clusters.
