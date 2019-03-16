@@ -7,8 +7,10 @@ iris-ssl10/
 iris-ssl20/
 iris-ssl30/
 iris-ssl40/
+magic-ssl10/
+magic-ssl20/
+magic-ssl30/
+magic-ssl40/
 
 # Diagrams
-diagrams/10
-diagrams/20
-diagrams/30
+diagrams/
