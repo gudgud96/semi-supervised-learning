@@ -3,13 +3,15 @@ from collections import Counter
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from models import ClusterThenLabeller
 import numpy as np
-from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, confusion_matrix
 from utils import plot_confusion_matrix
 
+
 np.random.seed(10)
+dataset = "iris"       # either ["iris", "magic"]
 
 
 def prepare_data(filename='iris-ssl40/iris-ssl40-10-1trs.dat'):
@@ -19,8 +21,10 @@ def prepare_data(filename='iris-ssl40/iris-ssl40-10-1trs.dat'):
     :return:
         X_data, Y_data - X data and label Y data.
     '''
-    # classes = ['unlabeled', 'Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
-    classes = ['unlabeled', 'g', 'h']
+    if "iris" in filename:
+        classes = ['unlabeled', 'Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+    elif "magic" in filename:
+        classes = ['unlabeled', 'g', 'h']
     X = []
     Y = []
     for line in open(filename, 'r'):
@@ -145,86 +149,29 @@ def plot_boundaries(kmeans, X_data):
     plt.show()
 
 
-# TODO: Incorporate other clustering algorithms in this function
-def cluster_then_label(X_data, Y_data, filename):
-    '''
-    Main function for cluster-then-label.
-    :param X_data: X data.
-    :param Y_data: Y label data.
-    :return:
-        kmeans - K-means clustering model.
-        y_kmeans - Y-predicted value by model.
-        label_dict - label dictionary, maps Y-predicted value to label value defined in data.
-    '''
-
-    # Experimenting on different number of clusters
-    wcss = []
-    for i in range(1, 11):
-        kmeans = KMeans(n_clusters=i, init='k-means++', max_iter=300, n_init=10, random_state=0)
-        kmeans.fit(X_data)
-        wcss.append(kmeans.inertia_)
-
-    # Plotting the results onto a line graph, allowing us to observe 'The elbow'
-    plt.plot(range(1, 11), wcss)
-    plt.title('The elbow method')
-    plt.xlabel('Number of clusters')
-    plt.ylabel('WCSS')  # within cluster sum of squares
-    plt.savefig(filename + 'elbow.png')
-    plt.close()
-
-    # Creating the kmeans classifier
-    kmeans = KMeans(n_clusters=2, init='k-means++', max_iter=600, n_init=10, random_state=0)
-    y_kmeans = kmeans.fit_predict(X_data)
-
-    # Assigning labels - majority vote
-    label_dict = {}
-    n_clusters = len(Counter(y_kmeans))
-
-    for i in range(n_clusters):  # labels in k_means result
-        counter_dict = Counter(Y_data[y_kmeans == i])
-        del counter_dict[0]     # unlabelled is not useful for us to determine the majority label
-        print(counter_dict)
-        majority_label = sorted(counter_dict, key=counter_dict.get, reverse=True)[0]
-        label_dict[i] = majority_label
-    print(label_dict)
-
-    for i in range(len(y_kmeans)):
-        if Y_data[i] == 0:
-            y_kmeans[i] = label_dict[y_kmeans[i]]   # label the unlabelled
-        else:
-            y_kmeans[i] = Y_data[i]
-
-    # Visualising the clusters
-    plt.figure(3, figsize=(8, 6))
-    plt.clf()
-    plt.scatter(X_data[y_kmeans == 1, 0], X_data[y_kmeans == 1, 1],
-                s=100, c='red', edgecolor='k', label='Iris-setosa')
-    plt.scatter(X_data[y_kmeans == 2, 0], X_data[y_kmeans == 2, 1],
-                s=100, c='blue', edgecolor='k', label='Iris-versicolour')
-    plt.scatter(X_data[y_kmeans == 3, 0], X_data[y_kmeans == 3, 1],
-                s=100, c='green', edgecolor='k', label='Iris-virginica')
-
-    # Plotting the centroids of the clusters
-    plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1],
-                marker='x', s=169, linewidths=10,
-                color='black', zorder=10, label='Centroids')
-    plt.legend()
-    plt.xlabel('Sepal length')
-    plt.ylabel('Sepal width')
-    plt.xticks(())
-    plt.yticks(())
-    plt.savefig(filename + 'clustered.png')
-    plt.close()
-
-    return kmeans, y_kmeans, label_dict
+def get_params_by_dataset(dataset_name):
+    params = {}
+    if dataset_name == "iris":
+        params["class_names"] = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+        params["xlabel"] = 'Sepal length'
+        params["ylabel"] = 'Sepal width'
+    elif dataset_name == "magic":
+        params["class_names"] = ['g', 'h']
+        params["xlabel"] = 'fLength'
+        params["ylabel"] = 'fWidth'
+    return params
 
 
 def main():
-    # prepare data - unlabelled, labelled, test
-    dataset = "magic"
-    for j in [10]:
+    params = get_params_by_dataset(dataset)
+    class_names, xlabel, ylabel = params["class_names"], params["xlabel"], params["ylabel"]
+    mode = "majority"       # majority or svm
+
+    for j in [10, 20, 30, 40]:
         for k in range(1, 11):
-            filename = "temp-{}/".format(k)
+
+            # prepare data - unlabelled, labelled, test
+            filename = "temp-{}-{}/".format(j, k)
             os.makedirs(filename)
             num = k
             percentage = j
@@ -237,44 +184,44 @@ def main():
             plot_scatter(X_unlabelled, Y_unlabelled, name=filename + "unlabelled.png")
 
             X_labelled, Y_labelled = prepare_data(trs_filename)
+            print("Labelled: ", X_labelled.shape, Y_labelled.shape)
             plot_scatter(X_labelled, Y_labelled, name=filename + "labelled.png")
 
             X_test, Y_test = prepare_data(tst_filename)
             print(X_test.shape, Y_test.shape)
 
-            # plot_pca(X_labelled, Y_labelled)
-            # break
+            # if k == 1:
+            #     plot_pca(X_labelled, Y_labelled)
 
-            # use supervised learning for cluster-then-label
-            model, y_predict, label_dict = cluster_then_label(X_labelled, Y_labelled, filename)
+            # initialize model
+            model = ClusterThenLabeller(X_unlabelled, Y_unlabelled, xlabel, ylabel, filename)
+            number_of_classes = len(Counter(Y_unlabelled).keys()) - 1
+            model.set_clusterer(number_of_classes, "kmeans")
+            model.set_classifier(mode="linearsvm")
 
-            # semi-supervised learning for cluster-then-label
-            # model, y_predict, label_dict = cluster_then_label(X_unlabelled, Y_unlabelled, filename)
-            # print("Accuracy for labelling: {}".format(accuracy_score(Y_labelled, y_predict)))
-            #
-            # # confusion matrix for labelling
+            # semi-supervised learning with cluster-then-label
+            y_predict = model.cluster_then_label(mode=mode)
+            print("Accuracy for labelling: {}".format(accuracy_score(Y_labelled, y_predict)))
+
+            # confusion matrix for labelling
             cnf_matrix = confusion_matrix(Y_labelled, y_predict)
             np.set_printoptions(precision=2)
-            # class_names = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
-            class_names = ['g', 'h']
             plot_confusion_matrix(cnf_matrix, classes=class_names,
                                   title='Confusion matrix')
             plt.savefig(filename + 'cm_label.png')
             plt.close()
-            #
-            # # run on test data
-            y_test_predict = model.predict(X_test)
-            for i in range(len(y_test_predict)):
-                y_test_predict[i] = label_dict[y_test_predict[i]]
+
+            # run test data
+            y_test_predict = model.predict_on_test(y_predict, X_test)
+            print(y_test_predict)
+            print(y_test_predict.shape)
             plot_scatter(X_test, Y_test, name=filename + 'test_answer.png')
             plot_scatter(X_test, y_test_predict, name=filename + 'test_predict.png')
             print("Accuracy for testing: {}\n".format(accuracy_score(Y_test, y_test_predict)))
-            #
-            # # confusion matrix on test data
+
+            # confusion matrix on test data
             cnf_matrix = confusion_matrix(Y_test, y_test_predict)
             np.set_printoptions(precision=2)
-            # class_names = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
-            class_names = ['g', 'h']
             plot_confusion_matrix(cnf_matrix, classes=class_names,
                                   title='Confusion matrix')
             plt.savefig(filename + 'cm_test.png')
