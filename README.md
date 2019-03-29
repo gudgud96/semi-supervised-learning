@@ -50,8 +50,8 @@ Test acc | 0.8933 | 0.8999 | 0.8933 | 0.9266
 
 Comparison of each method are visualized as below:
 
-![](Label Accuracy.png) 
-![](Test Accuracy.png) 
+![](label_iris.png) 
+![](test_iris.png) 
 
 ##### Magic dataset (average taken across 10-folds):
 
@@ -77,8 +77,8 @@ Test acc | 0.6541 | 0.6534 | 0.6529 | 0.6521
 
 Comparison of each method are visualized as below:
 
-![](Label Accuracy Magic.png) 
-![](Test Accuracy Magic.png) 
+![](label_magic.png) 
+![](test_magic.png) 
 
 ### To-do
 - [ ] Use other clustering algorithms (hierachical agglomerative), observer
