@@ -5,6 +5,8 @@ Updated: 29.3.2019
 Cluster-then-label is a method of labelling unlabelled data, prior to 
 training a classifier on all self-labelled data.
 
+
+### Algorithm
 The step-by-step algorithm is as below (refer to [Zhu and Goldberg]()):
 
 Input: labelled data (X<sub>*l*</sub>, Y<sub>*l*</sub>), 
@@ -19,42 +21,8 @@ Input: labelled data (X<sub>*l*</sub>, Y<sub>*l*</sub>),
     * Apply S to all unlabelled instance in this cluster.
 3. Train another supervised learning algorithm on all data after labelling.
 
-Here,  we use **K-means** as the clustering algorithm, and we set the number of
-clusters = the number of classes in the labels. We use 
-**majority vote** and **SVM** to learn patterns within the cluster.
-
-For the final classifier, we try **SVM** with linear and RBF kernel.
 
 ### Results
-##### Iris dataset (average taken acros 10-folds):
-
-Majority + LinearSVC | iris-40 | iris-30 | iris-20 | iris-10
-:---: | :---: | :---: | :---: | :---: 
-Label acc | 0.9229 | 0.9157 | 0.8888 | 0.8799 
-Test acc | 0.9332 | 0.9256 | 0.8931 | 0.8666 
-
-Majority + SVC | iris-40 | iris-30 | iris-20 | iris-10
-:---: | :---: | :---: | :---: | :---: 
-Label acc | 0.9229 | 0.9157 | 0.8888 | 0.8799 
-Test acc | 0.9133 | 0.9 | 0.8666 | 0.8666 
-
-SVC + LinearSVC | iris-40 | iris-30 | iris-20 | iris-10
-:---: | :---: | :---: | :---: | :---: 
-Label acc | 0.9303 | 0.9237 | 0.9170 | 0.9096 
-Test acc | 0.9333 | 0.9533 | 0.92 | 0.8999 
-
-SVC + SVC | iris-40 | iris-30 | iris-20 | iris-10
-:---: | :---: | :---: | :---: | :---: 
-Label acc | 0.9303 | 0.9237 | 0.9170 | 0.9096 
-Test acc | 0.8933 | 0.8999 | 0.8933 | 0.9266
-
-Comparison of each method are visualized as below:
-
-![](label_iris.png) 
-![](test_iris.png) 
-
-<br> 
-
 ##### Magic dataset (average taken across 10-folds):
 Experiment 1: Optimal number of clusters.
 
@@ -64,7 +32,7 @@ Number of clusters | Label Accuracy | Test Accuracy
 :---: | :---: | :---: 
 1 | 0.6857 | 0.6704
 2 | 0.6804 | 0.6609
-<b>3 | 0.7357 | 0.7128</b>
+**3** | **0.7357** | **0.7128**
 4 | 0.7242 | 0.7108
 5 | 0.7236 | 0.7106
 6 | 0.7269 | 0.7117
@@ -106,9 +74,43 @@ Decision Tree | 0.8318 | 0.8345 | 0.8332 | 0.8265
 **Random Forest** | **0.8606** | **0.8590** | **0.8544** | **0.8440**
 KNN(5) | 0.8082 | 0.8091 | 0.807 | 0.8061
 
+The accuracy for SVC is around 60+%, which is way lower than the
+accuracies above, hence we omit the results for that.
+
 From here, we can see that random forest is again the best model
 for classifying self-labelled data. This should be the best accuracy
 that we could achieve using cluster-and-label approach on MAGIC dataset.
+
+<br>
+
+##### Iris dataset (average taken acros 10-folds):
+
+Majority + LinearSVC | iris-40 | iris-30 | iris-20 | iris-10
+:---: | :---: | :---: | :---: | :---: 
+Label acc | 0.9229 | 0.9157 | 0.8888 | 0.8799 
+Test acc | 0.9332 | 0.9256 | 0.8931 | 0.8666 
+
+Majority + SVC | iris-40 | iris-30 | iris-20 | iris-10
+:---: | :---: | :---: | :---: | :---: 
+Label acc | 0.9229 | 0.9157 | 0.8888 | 0.8799 
+Test acc | 0.9133 | 0.9 | 0.8666 | 0.8666 
+
+SVC + LinearSVC | iris-40 | iris-30 | iris-20 | iris-10
+:---: | :---: | :---: | :---: | :---: 
+Label acc | 0.9303 | 0.9237 | 0.9170 | 0.9096 
+Test acc | 0.9333 | 0.9533 | 0.92 | 0.8999 
+
+SVC + SVC | iris-40 | iris-30 | iris-20 | iris-10
+:---: | :---: | :---: | :---: | :---: 
+Label acc | 0.9303 | 0.9237 | 0.9170 | 0.9096 
+Test acc | 0.8933 | 0.8999 | 0.8933 | 0.9266
+
+Comparison of each method are visualized as below:
+
+![](label_iris.png) 
+![](test_iris.png) 
+
+<br> 
 
 ### To-do
 - [ ] Use other clustering algorithms (hierachical agglomerative), observer
