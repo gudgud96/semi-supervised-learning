@@ -11,7 +11,7 @@ from utils import plot_confusion_matrix
 
 
 np.random.seed(10)
-dataset = "iris"       # either ["iris", "magic"]
+dataset = "magic"       # either ["iris", "magic"]
 
 
 def prepare_data(filename='iris-ssl40/iris-ssl40-10-1trs.dat'):
@@ -165,7 +165,10 @@ def get_params_by_dataset(dataset_name):
 def main():
     params = get_params_by_dataset(dataset)
     class_names, xlabel, ylabel = params["class_names"], params["xlabel"], params["ylabel"]
-    mode = "majority"       # majority or svm
+    mode = "forest"       # majority or svm
+
+    acc = []
+    test_acc = []
 
     for j in [10, 20, 30, 40]:
         for k in range(1, 11):
@@ -184,11 +187,11 @@ def main():
             plot_scatter(X_unlabelled, Y_unlabelled, name=filename + "unlabelled.png")
 
             X_labelled, Y_labelled = prepare_data(trs_filename)
-            print("Labelled: ", X_labelled.shape, Y_labelled.shape)
+            # print("Labelled: ", X_labelled.shape, Y_labelled.shape)
             plot_scatter(X_labelled, Y_labelled, name=filename + "labelled.png")
 
             X_test, Y_test = prepare_data(tst_filename)
-            print(X_test.shape, Y_test.shape)
+            # print(X_test.shape, Y_test.shape)
 
             # if k == 1:
             #     plot_pca(X_labelled, Y_labelled)
@@ -196,12 +199,15 @@ def main():
             # initialize model
             model = ClusterThenLabeller(X_unlabelled, Y_unlabelled, xlabel, ylabel, filename)
             number_of_classes = len(Counter(Y_unlabelled).keys()) - 1
-            model.set_clusterer(number_of_classes, "kmeans")
-            model.set_classifier(mode="linearsvm")
+            model.set_clusterer(3, "kmeans")        # try a different cluster number
+            model.set_classifier(mode="svm")
 
             # semi-supervised learning with cluster-then-label
             y_predict = model.cluster_then_label(mode=mode)
+            print("Actual labelling ratio: {}".format(Counter(Y_labelled)))
             print("Accuracy for labelling: {}".format(accuracy_score(Y_labelled, y_predict)))
+
+            acc.append(accuracy_score(Y_labelled, y_predict))
 
             # confusion matrix for labelling
             cnf_matrix = confusion_matrix(Y_labelled, y_predict)
@@ -213,11 +219,13 @@ def main():
 
             # run test data
             y_test_predict = model.predict_on_test(y_predict, X_test)
-            print(y_test_predict)
-            print(y_test_predict.shape)
+            # print(y_test_predict)
+            # print(y_test_predict.shape)
             plot_scatter(X_test, Y_test, name=filename + 'test_answer.png')
             plot_scatter(X_test, y_test_predict, name=filename + 'test_predict.png')
             print("Accuracy for testing: {}\n".format(accuracy_score(Y_test, y_test_predict)))
+
+            test_acc.append(accuracy_score(Y_test, y_test_predict))
 
             # confusion matrix on test data
             cnf_matrix = confusion_matrix(Y_test, y_test_predict)
@@ -226,6 +234,12 @@ def main():
                                   title='Confusion matrix')
             plt.savefig(filename + 'cm_test.png')
             plt.close()
+
+        print()
+        print("Average label accuracy: {}".format(sum(acc) / len(acc)))
+        print("Average test accuracy: {}".format(sum(test_acc) / len(test_acc)))
+        acc = []
+        test_acc = []
 
 
 if __name__ == "__main__":

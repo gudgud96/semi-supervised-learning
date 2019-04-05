@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.svm import SVC, LinearSVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 
 class ClusterThenLabeller:
@@ -26,10 +29,16 @@ class ClusterThenLabeller:
             pass    # extend more cluster algorithm here
 
     def set_classifier(self, mode="svm"):
-        if mode == "linearsvm":
-            self.classifier = SVC(gamma="auto")
-        else:
+        if mode == "svm":
+            self.classifier = SVC()
+        elif mode == "linearsvm":
             self.classifier = LinearSVC()
+        elif mode == "decision":
+            self.classifier = DecisionTreeClassifier(criterion='entropy')
+        elif mode == "forest":
+            self.classifier = RandomForestClassifier()
+        elif mode == "knn":
+            self.classifier = KNeighborsClassifier()
 
     def cluster_then_label(self, mode="majority"):
         '''
@@ -57,15 +66,16 @@ class ClusterThenLabeller:
         # Creating the kmeans classifier
         y_kmeans = self.clusterer.fit_predict(self.X_data)
 
-        print("y_kmeans.shape: ", y_kmeans.shape)
+        # print("y_kmeans.shape: ", y_kmeans.shape)
         print("After clustering: ", Counter(y_kmeans))
 
         # train a predictor, f, from all labelled data
         X_labelled_data = self.X_data[self.Y_data != 0]
         Y_labelled_data = self.Y_data[self.Y_data != 0]
-        print("Labelled data: x - {}, y - {}".format(X_labelled_data.shape, Y_labelled_data.shape))
-        labelled_clf = SVC(gamma="auto")
+        # print("Labelled data: x - {}, y - {}".format(X_labelled_data.shape, Y_labelled_data.shape))
+        # labelled_clf = SVC(gamma="auto")
         # labelled_clf = LinearSVC()
+        labelled_clf = DecisionTreeClassifier()
         print("Fitting classifier on labelled data...")
         labelled_clf.fit(X_labelled_data, Y_labelled_data)
 
@@ -78,36 +88,45 @@ class ClusterThenLabeller:
             X_this_cluster = self.X_data[y_kmeans == i]
             Y_this_cluster = self.Y_data[y_kmeans == i]
             counter_dict = Counter(Y_this_cluster)
-            print("Cluster " + str(i) + " labels", counter_dict)
+            # print("Cluster " + str(i) + " labels", counter_dict)
             del counter_dict[0]  # unlabelled is not useful for us to determine the majority label
 
-            if mode == "svm":
+            if mode in ["svm", "decision", "forest", "knn"]:
                 # trained on labelled data in the cluster
                 X_labelled = X_this_cluster[Y_this_cluster != 0]
                 Y_labelled = Y_this_cluster[Y_this_cluster != 0]
 
                 # if there is a significant amount of labelled data / has more than 1 class in the cluster,
                 # train the specific cluster clf
-                print("Percentage of labelled data in cluster: {}".format(len(X_labelled) / len(X_this_cluster)))
+                # print("Percentage of labelled data in cluster: {}".format(len(X_labelled) / len(X_this_cluster)))
                 if len(X_labelled) > 0 and len(counter_dict.keys()) > 1:
                     t1 = time.time()
-                    cluster_clf = SVC(gamma="auto")
-                    # cluster_clf = LinearSVC()
+
+                    if mode == "svm":
+                        cluster_clf = SVC(gamma="auto")
+                    elif mode == "decision":
+                        cluster_clf = DecisionTreeClassifier()
+                    elif mode == "forest":
+                        cluster_clf = RandomForestClassifier()
+                    elif mode == "knn":
+                        cluster_clf = KNeighborsClassifier()
+                    else:
+                        cluster_clf = LinearSVC()
+
                     cluster_clf = cluster_clf.fit(X_labelled, Y_labelled)
-                    print("Time taken for cluster clf: ", time.time() - t1)
+                    # print("Time taken for cluster clf: ", time.time() - t1)
                     list_of_clfs.append(cluster_clf)
 
                 # or else, just use the universal clf trained on all labelled data
                 else:
                     list_of_clfs.append(labelled_clf)
 
-            # TODO: supervised learning algorithm here, currently only have majority vote
             if mode == "majority":
                 majority_label = sorted(counter_dict, key=counter_dict.get, reverse=True)[0]
                 print("Majority label in this cluster: " + str(majority_label))
                 cluster_to_label_dict[i] = majority_label
                 self.Y_data[(y_kmeans == i) & (self.Y_data == 0)] = majority_label
-                print("Cluster to label dict: ", cluster_to_label_dict)
+                # print("Cluster to label dict: ", cluster_to_label_dict)
 
             else:
                 y_indices_in_cluster = np.where((y_kmeans == i) & (self.Y_data == 0))[0]

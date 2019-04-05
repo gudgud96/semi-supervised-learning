@@ -53,40 +53,65 @@ Comparison of each method are visualized as below:
 ![](label_iris.png) 
 ![](test_iris.png) 
 
+<br> 
+
 ##### Magic dataset (average taken across 10-folds):
+Experiment 1: Optimal number of clusters.
 
-Majority + LinearSVC | magic-40 | magic-30 | magic-20 | magic-10
+Run on majority vote + decision trees setting in magic-10.
+
+Number of clusters | Label Accuracy | Test Accuracy
+:---: | :---: | :---: 
+1 | 0.6857 | 0.6704
+2 | 0.6804 | 0.6609
+<b>3 | 0.7357 | 0.7128</b>
+4 | 0.7242 | 0.7108
+5 | 0.7236 | 0.7106
+6 | 0.7269 | 0.7117
+
+Hence, we set the optimal number of cluster to be **3**. It corresponds to 
+elbow diagram as below. This shows that the optimal number of clusters
+do not necessarily equal to the number of classes.
+
+![](elbow.png) 
+
+<br>
+
+Experiment 2: Optimal supervised predictor within cluster
+
+Run on various models as below to determine the best model to predict
+the labels within the clusters.
+
+Label Accuracy | magic-40 | magic-30 | magic-20 | magic-10
 :---: | :---: | :---: | :---: | :---: 
-Label acc | 0.8228 | 0.7949 | 0.7653 | 0.7351 
-Test acc | 0.6889 | 0.6221 | 0.6632 | 0.6978 
+Majority Vote | 0.8228 | 0.7949 | 0.7653 | 0.7351 
+Decision Tree | 0.8858 | 0.8627 | 0.8384 | 0.8082
+**Random Forest** | **0.9141** | **0.8978** | **0.8784** | **0.8541**
+KNN(5) | 0.8778 | 0.8557 | 0.8304 | 0.7966
+SVC | 0.8247 | 0.7966 | 0.7665 | 0.7357
 
-Majority + SVC | magic-40 | magic-30 | magic-20 | magic-10
+As seen from the results, random forest yields the best result. Hence,
+we will use random forest for self-labelling predictor.
+
+<br>
+
+Experiment 3: Classify on self-label data
+
+Finally, we find the best classifier that yields the best result
+on the self-labelled data.
+
+Label Accuracy | magic-40 | magic-30 | magic-20 | magic-10
 :---: | :---: | :---: | :---: | :---: 
-Label acc | 0.8228 | 0.7949 | 0.7654 | 0.7351 
-Test acc | 0.6541 | 0.6535 | 0.6529 | 0.6521 
+Decision Tree | 0.8318 | 0.8345 | 0.8332 | 0.8265
+**Random Forest** | **0.8606** | **0.8590** | **0.8544** | **0.8440**
+KNN(5) | 0.8082 | 0.8091 | 0.807 | 0.8061
 
-SVC + LinearSVC | magic-40 | magic-30 | magic-20 | magic-10
-:---: | :---: | :---: | :---: | :---: 
-Label acc | 0.8247 | 0.7965 | 0.7664 | 0.7357 
-Test acc | 0.6879 | 0.6615 | 0.6733 | 0.6839 
-
-SVC + SVC | magic-40 | magic-30 | magic-20 | magic-10
-:---: | :---: | :---: | :---: | :---: 
-Label acc | 0.8247 | 0.7965 | 0.7664 | 0.7357 
-Test acc | 0.6541 | 0.6534 | 0.6529 | 0.6521
-
-Comparison of each method are visualized as below:
-
-![](label_magic.png) 
-![](test_magic.png) 
+From here, we can see that random forest is again the best model
+for classifying self-labelled data. This should be the best accuracy
+that we could achieve using cluster-and-label approach on MAGIC dataset.
 
 ### To-do
 - [ ] Use other clustering algorithms (hierachical agglomerative), observer
 how different clustering affects the performance
-- [ ] Comparison with baselines (upper bound - supervised learning on all 
-data labelled, lower bound - supervised learning on all visible labelled data)
-- [ ] Different datasets should have different models that suits best. We
-can find the best that suits for each, find its lower and upper bounds,
-and compare on each of the different mechanisms.
 - [ ] Run on MNIST data
 - [X] Use supervised classifier other than majority vote for classifiying in clusters.
